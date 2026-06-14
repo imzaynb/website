@@ -5,16 +5,30 @@ import { fetchFromStrapi } from '../lib/strapi';
 import { marked } from 'marked';
 
 // 1. Fetch Profile Data
-let profile = { bio: "Intro: who I am..." };
+let profile: any = { bio: "Intro: who I am..." };
 try {
-  const data = await fetchFromStrapi({ endpoint: 'about-me' });
+  // Pulling profile structure from your 'about-me' single-type endpoint
+  const data = await fetchFromStrapi({ endpoint: 'about-me', query: '?populate=*' });
+  console.log(data);
   if (data?.attributes) profile = data.attributes;
   else if (data) profile = data;
 } catch (error) {
   console.error("Error loading profile details:", error);
 }
 
-const htmlBio = marked.parse(profile.bio);
+// Convert rich-text biography Markdown to clean safe HTML markup
+const htmlBio = marked.parse(profile.bio || '');
+
+// Setup base url endpoint parameter to safely extract local system media images
+const strapiBaseUrl = import.meta.env.STRAPI_URL || 'http://localhost:1337';
+
+// SAFE DATA TARGETING: Target the media payload nested inside your profile object
+const rawHeadshot = profile.headshot;
+const relativeImageUrl = typeof rawHeadshot === 'string' 
+  ? rawHeadshot 
+  : rawHeadshot?.data?.attributes?.url || rawHeadshot?.url;
+
+const absoluteImageUrl = relativeImageUrl ? `${strapiBaseUrl}${relativeImageUrl}` : null;
 
 // 2. Fetch Curated/Recent Blog Posts
 let featuredPosts = [];
@@ -22,7 +36,7 @@ try {
   // Pulling articles, sorting by newest, and limiting to 3 entries
   const posts = await fetchFromStrapi({ 
     endpoint: 'blogs',
-    query: '?_sort=publishedAt:DESC&_limit=3' // Adjust parameters based on your Strapi version
+    query: '?_sort=publishedAt:DESC&_limit=3' 
   });
   featuredPosts = posts.map((p: any) => p.attributes ? p.attributes : p);
 } catch (error) {
@@ -46,7 +60,7 @@ const formatDate = (dateStr: string) => {
       
       <section class="flex items-center gap-6 sm:gap-8 mb-20">
         <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-none overflow-hidden bg-foreground/5 border border-foreground/10 flex-shrink-0">
-          <img src="/avatar.png" alt="Zayn Baig" class="w-full h-full object-cover grayscale" />
+          <img src={absoluteImageUrl} alt="Zayn Baig" class="w-full h-full object-cover grayscale" />
         </div>
         <div>
           <h1 class="text-4xl font-serif font-black text-foreground tracking-tight mb-1.5">
@@ -60,7 +74,9 @@ const formatDate = (dateStr: string) => {
 
       <section class="w-full mb-24">
         <article 
-          class="prose prose-sm sm:prose-base font-serif text-foreground/90 max-w-none text-justify leading-relaxed space-y-6" 
+          class="prose prose-sm sm:prose-base font-serif text-foreground/90 max-w-none text-justify leading-relaxed space-y-6
+                 prose-a:text-primary prose-a:font-bold prose-a:underline prose-a:underline-offset-4 
+                 hover:prose-a:text-highlight prose-a:transition-colors" 
           set:html={htmlBio} 
         />
       </section>
@@ -117,3 +133,42 @@ const formatDate = (dateStr: string) => {
     </div>
   </main>
 </Layout>
+
+<style>
+  /* Seamless Print Headings styling */
+  article :global(h1) {
+    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+    font-size: 1.5rem;             
+    font-weight: 900;              
+    color: var(--color-foreground, #0c1618);
+    letter-spacing: -0.025em;      
+    margin-top: 2.5rem;              
+    margin-bottom: 0.875rem;        
+    display: block;
+  }
+
+  /* Clear Editorial Body Text Layout */
+  article :global(p) {
+    font-size: 0.935rem;           /* Bumped slightly for comfortable reading */
+    line-height: 1.65;            
+    margin-bottom: 1.25rem;        
+    color: var(--color-foreground, #0c1618);
+    opacity: 0.95;
+  }
+
+  /* High-Visibility Editorial Links Setup */
+  article :global(a) {
+    color: var(--color-primary, #66105c);      /* Uses your rich amethyst purple */
+    font-weight: 700;                          /* Makes the link text bold */
+    text-decoration: underline;
+    text-underline-offset: 4px;                /* Adds premium breathing room beneath text */
+    text-decoration-thickness: 1.5px;
+    transition: color 0.2s ease-in-out;
+  }
+
+  /* Elegant Hover State Feedback Cue */
+  article :global(a:hover) {
+    color: var(--color-highlight, #22a39f);    /* Smoothly morphs into your seafoam cyan */
+    text-decoration-color: var(--color-highlight, #22a39f);
+  }
+</style>

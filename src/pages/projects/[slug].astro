@@ -6,7 +6,12 @@ import { marked } from 'marked';
 
 export async function getStaticPaths() {
   try {
-    const projects = await fetchFromStrapi({ endpoint: 'projects' });
+    // ✅ FIX: Force Strapi to populate relational data (images/tags) during build generation
+    const projects = await fetchFromStrapi({ 
+      endpoint: 'projects', 
+      query: '?populate=*' 
+    });
+    
     return projects.map((item: any) => {
       const project = item.attributes ? item.attributes : item;
       return {
@@ -22,6 +27,17 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const htmlContent = marked.parse(project.description || '');
+
+// Define the system base URL to point to your Strapi engine locally or in production
+const strapiBaseUrl = import.meta.env.STRAPI_URL || 'http://localhost:1337';
+
+// ✅ FIX: Cleanly extract the relative media URL and build the absolute image path
+const rawImage = project.image;
+const relativeImageUrl = typeof rawImage === 'string'
+  ? rawImage
+  : rawImage?.data?.attributes?.url || rawImage?.url;
+
+const absoluteImageUrl = relativeImageUrl ? `${strapiBaseUrl}${relativeImageUrl}` : null;
 
 const tagList = Array.isArray(project.tags)
   ? project.tags
@@ -59,10 +75,10 @@ const tagList = Array.isArray(project.tags)
         )}
       </header>
 
-      {project.image && (
+      {absoluteImageUrl && (
         <div class="w-full aspect-[16/9] bg-foreground/5 border border-foreground/10 overflow-hidden mb-10">
           <img 
-            src={typeof project.image === 'string' ? project.image : project.image?.data?.attributes?.url} 
+            src={absoluteImageUrl} 
             alt={project.title} 
             class="w-full h-full object-cover grayscale"
           />
@@ -78,7 +94,7 @@ const tagList = Array.isArray(project.tags)
 </Layout>
 
 <style>
-  /* Matches your beautiful blog subheadings exactly */
+  /* Seamless Print Headings styling */
   article :global(h1) {
     font-family: Georgia, Cambria, "Times New Roman", Times, serif;
     font-size: 1.5rem;             
@@ -90,12 +106,28 @@ const tagList = Array.isArray(project.tags)
     display: block;
   }
 
-  /* Matches your beautiful blog paragraph typography exactly */
+  /* Clear Editorial Body Text Layout */
   article :global(p) {
     font-size: 0.935rem;           
     line-height: 1.65;            
     margin-bottom: 1.25rem;        
     color: var(--color-foreground, #0c1618);
     opacity: 0.95;
+  }
+
+  /* High-Visibility Editorial Links Setup */
+  article :global(a) {
+    color: var(--color-primary, #66105c);      
+    font-weight: 700;                          
+    text-decoration: underline;
+    text-underline-offset: 4px;                
+    text-decoration-thickness: 1.5px;
+    transition: color 0.2s ease-in-out;
+  }
+
+  /* Elegant Hover State Feedback Cue */
+  article :global(a:hover) {
+    color: var(--color-highlight, #22a39f);    
+    text-decoration-color: var(--color-highlight, #22a39f);
   }
 </style>

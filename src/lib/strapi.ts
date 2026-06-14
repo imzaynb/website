@@ -5,7 +5,8 @@ interface Props {
 
 export async function fetchFromStrapi({ endpoint, query }: Props) {
   const strapiUrl = import.meta.env.STRAPI_URL || 'http://127.0.0.1:1337';
-  const response = await fetch(`${strapiUrl}/api/${endpoint}?${query || ''}`);
+  console.log(`${strapiUrl}/api/${endpoint}${query || ''}`);
+  const response = await fetch(`${strapiUrl}/api/${endpoint}${query || ''}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch from Strapi: ${response.statusText}`);

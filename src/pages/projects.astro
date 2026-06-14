@@ -6,7 +6,10 @@ import { fetchFromStrapi } from '../lib/strapi';
 
 let projects = [];
 try {
-  projects = await fetchFromStrapi({ endpoint: 'projects' });
+  projects = await fetchFromStrapi({ 
+    endpoint: 'projects',
+    query: '?populate=*'
+  });
 } catch (error) {
   console.error("Could not fetch portfolio items:", error);
 }

@@ -1,4 +1,5 @@
 ---
+// frontend/src/components/ProjectCard.astro
 interface Props {
   project: {
     title: string;
@@ -11,6 +12,15 @@ interface Props {
 
 const { project } = Astro.props;
 
+const strapiBaseUrl = import.meta.env.STRAPI_URL || 'http://localhost:1337';
+
+const rawImage = project.image;
+const relativeImageUrl = typeof rawImage === 'string'
+  ? rawImage
+  : rawImage?.data?.attributes?.url || (rawImage as any)?.url;
+
+const absoluteImageUrl = relativeImageUrl ? `${strapiBaseUrl}${relativeImageUrl}` : null;
+
 const tagList = Array.isArray(project.tags) 
   ? project.tags 
   : typeof project.tags === 'string' 
@@ -18,12 +28,12 @@ const tagList = Array.isArray(project.tags)
     : [];
 ---
 
-<div class="bg-white border border-foreground/10 flex flex-col h-full group hover:border-highlight/40 transition-colors duration-300">
+<div class="bg-foreground/[0.015] border border-foreground/10 flex flex-col h-full group hover:border-highlight/40 transition-colors duration-300">
   
   <div class="aspect-[16/10] w-full bg-foreground/5 border-b border-foreground/10 overflow-hidden relative">
-    {project.image ? (
+    {absoluteImageUrl ? (
       <img 
-        src={typeof project.image === 'string' ? project.image : project.image?.data?.attributes?.url} 
+        src={absoluteImageUrl} 
         alt={project.title}
         class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
       />
