@@ -1,0 +1,83 @@
+---
+// frontend/src/pages/blog/[slug].astro
+import Layout from '../../layouts/Layout.astro';
+import { fetchFromStrapi } from '../../lib/strapi';
+import { marked } from 'marked';
+
+export async function getStaticPaths() {
+  try {
+    const posts = await fetchFromStrapi({ endpoint: 'blogs' });
+    return posts.map((item: any) => {
+      const post = item.attributes ? item.attributes : item;
+      return {
+        params: { slug: post.slug },
+        props: { post },
+      };
+    });
+  } catch (error) {
+    console.error("Error generating static paths for blog posts:", error);
+    return [];
+  }
+}
+
+const { post } = Astro.props;
+const htmlContent = marked.parse(post.content || '');
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+};
+---
+
+<Layout title={`${post.title} | Writing`}>
+  <main class="flex-1 h-[calc(100vh-64px)] md:h-screen overflow-y-auto px-8 sm:px-16 md:px-24 py-16 md:py-24 bg-background scroll-smooth">
+    <div class="max-w-2xl mx-auto">
+      
+      <div class="mb-14">
+        <a 
+          href="/blog" 
+          class="font-sans text-[11px] font-bold tracking-widest text-foreground/40 hover:text-primary uppercase transition-colors inline-flex items-center gap-2"
+        >
+          <span class="text-[10px] font-sans">‹‹‹</span> Back to Writing
+        </a>
+      </div>
+
+      <header class="mb-10">
+        <h1 class="text-3xl sm:text-4xl font-serif font-black text-foreground tracking-tight leading-tight mb-3">
+          {post.title}
+        </h1>
+        <p class="font-sans text-[11px] font-bold tracking-[0.15em] text-foreground/40 uppercase">
+          Published on {formatDate(post.date || post.publishedAt)}
+        </p>
+      </header>
+
+      <article class="font-serif text-foreground/90 text-justify space-y-6">
+        <div set:html={htmlContent} />
+      </article>
+
+    </div>
+  </main>
+</Layout>
+
+<style>
+  /* Seamless Print Headings styling */
+  article :global(h1) {
+    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+    font-size: 1.5rem;             
+    font-weight: 900;              
+    color: var(--color-foreground, #0c1618);
+    letter-spacing: -0.025em;      
+    margin-top: 2.5rem;              
+    margin-bottom: 0.875rem;        
+    display: block;
+  }
+
+  /* Clear Editorial Body Text Layout */
+  article :global(p) {
+    font-size: 0.935rem;           /* Bumped slightly for comfortable reading */
+    line-height: 1.65;            
+    margin-bottom: 1.25rem;        
+    color: var(--color-foreground, #0c1618);
+    opacity: 0.95;
+  }
+</style>

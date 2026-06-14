@@ -1,0 +1,72 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { fetchFromStrapi } from '../lib/strapi';
+
+let posts = [];
+try {
+  // Pull entries sorted with the most recent articles displaying first
+  const response = await fetchFromStrapi({ 
+    endpoint: 'blogs',
+    query: '?_sort=date:DESC' 
+  });
+  posts = response.map((p: any) => p.attributes ? p.attributes : p);
+} catch (error) {
+  console.error("Error loading blog posts:", error);
+}
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+};
+---
+
+<Layout title="Writing | Zayn Baig">
+  <main class="flex-1 h-[calc(100vh-64px)] md:h-screen overflow-y-auto px-8 sm:px-16 md:px-24 py-16 md:py-24 bg-background scroll-smooth">
+    
+    <div class="max-w-2xl mx-auto">
+      
+      <h1 class="text-4xl font-serif font-black text-foreground tracking-tight mb-20">
+        Writing
+      </h1>
+
+      {posts.length > 0 ? (
+        <div class="space-y-12">
+          {posts.map((post: any) => (
+            <div class="group relative flex flex-col p-6 sm:p-8 bg-foreground/[0.025] border-l-2 border-primary/40 transition-all duration-300 hover:bg-foreground/[0.04]">
+              
+              <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+                <h2 class="text-xl font-serif font-black text-foreground leading-tight tracking-tight group-hover:text-primary transition-colors">
+                  <a href={`/blog/${post.slug}`} class="focus:outline-none">
+                    {post.title}
+                  </a>
+                </h2>
+                <span class="font-sans text-[11px] font-bold tracking-wider text-foreground/40 uppercase whitespace-nowrap sm:text-right">
+                  {formatDate(post.date || post.publishedAt)}
+                </span>
+              </div>
+
+              <p class="text-sm font-serif text-foreground/75 leading-relaxed text-justify mb-4">
+                {post.excerpt}
+              </p>
+
+              <div class="text-right">
+                <a 
+                  href={`/blog/${post.slug}`} 
+                  class="font-serif text-xs font-bold text-foreground/50 hover:text-primary tracking-wide transition-colors inline-flex items-center gap-1"
+                >
+                  Read essay <span class="text-[10px] font-sans tracking-tighter opacity-80">›››</span>
+                </a>
+              </div>
+
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="border border-dashed border-foreground/20 p-12 text-center font-serif text-foreground/50 italic">
+          No published articles found in the archive.
+        </div>
+      )}
+
+    </div>
+  </main>
+</Layout>

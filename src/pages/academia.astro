@@ -1,0 +1,64 @@
+---
+// frontend/src/pages/academia.astro
+import Layout from '../layouts/Layout.astro';
+import TimelineCard from '../components/TimelineCard.astro';
+import { fetchFromStrapi } from '../lib/strapi';
+
+let events = [];
+try {
+  events = await fetchFromStrapi({ endpoint: 'timeline-events' });
+  events.sort((a: any, b: any) => {
+    const dateA = new Date(a.attributes?.start_date || a.start_date || 0).getTime();
+    const dateB = new Date(b.attributes?.start_date || b.start_date || 0).getTime();
+    return dateB - dateA;
+  });
+} catch (error) {
+  console.error("Error loading timeline events:", error);
+}
+
+const careerEvents = events.filter((e: any) => (e.attributes?.type || e.type) === 'primary');
+const extracurricularEvents = events.filter((e: any) => (e.attributes?.type || e.type) !== 'primary');
+---
+
+<Layout title="Experiences | Zayn Baig">
+  <main class="flex-1 h-[calc(100vh-64px)] md:h-screen overflow-y-auto px-8 sm:px-16 md:px-24 py-16 md:py-24 bg-background scroll-smooth">
+    
+    <div class="max-w-2xl mx-auto">
+      
+      <h1 class="text-4xl font-serif font-black text-foreground tracking-tight mb-20">
+        Experiences
+      </h1>
+
+      <div class="space-y-20">
+        
+        {careerEvents.length > 0 && (
+          <section class="space-y-10">
+            <h2 class="font-sans text-[11px] font-bold tracking-[0.25em] text-highlight uppercase mb-8">
+              Professional & Academic History
+            </h2>
+            <div class="space-y-12">
+              {careerEvents.map((item: any) => (
+                <TimelineCard e={item.attributes || item} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {extracurricularEvents.length > 0 && (
+          <section class="space-y-10 pt-4">
+            <h2 class="font-sans text-[11px] font-bold tracking-[0.25em] text-primary uppercase mb-8">
+              Involvements & Field Projects
+            </h2>
+            <div class="space-y-12">
+              {extracurricularEvents.map((item: any) => (
+                <TimelineCard e={item.attributes || item} />
+              ))}
+            </div>
+          </section>
+        )}
+        
+      </div>
+
+    </div>
+  </main>
+</Layout>

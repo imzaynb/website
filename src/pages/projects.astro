@@ -1,0 +1,39 @@
+---
+// frontend/src/pages/projects.astro
+import Layout from '../layouts/Layout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { fetchFromStrapi } from '../lib/strapi';
+
+let projects = [];
+try {
+  projects = await fetchFromStrapi({ endpoint: 'projects' });
+} catch (error) {
+  console.error("Could not fetch portfolio items:", error);
+}
+---
+
+<Layout title="Projects | Zayn Baig">
+  <main class="flex-1 h-[calc(100vh-64px)] md:h-screen overflow-y-auto px-8 sm:px-16 md:px-24 py-16 md:py-24 bg-background scroll-smooth">
+    
+    <div class="max-w-2xl mx-auto">
+      
+      <h1 class="text-4xl font-serif font-black text-foreground tracking-tight mb-20">
+        Projects
+      </h1>
+
+      {projects.length > 0 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 items-start">
+          {projects.map((item: any) => {
+            const projectData = item.attributes ? item.attributes : item;
+            return <ProjectCard project={projectData} />;
+          })}
+        </div>
+      ) : (
+        <div class="border border-dashed border-foreground/20 p-12 text-center font-serif text-foreground/50 italic">
+          No cataloged entries found.
+        </div>
+      )}
+
+    </div>
+  </main>
+</Layout>

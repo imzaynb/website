@@ -1,0 +1,16 @@
+/* frontend/src/styles/global.css */
+@import "tailwindcss";
+
+@theme {
+  /* Kept the exact same slate-blue tint, but brightened it for a fresh canvas */
+  --color-background: #f4f7fa; 
+  
+  /* Pushed from muted eggplant into a vibrant, rich amethyst purple */
+  --color-primary: #66105c;
+  
+  /* Vibrant, high-visibility seafoam cyan */
+  --color-highlight: #22a39f;
+
+  /* Deep ink black for pristine typography reading contrast */
+  --color-foreground: #0c1618;
+}

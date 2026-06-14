@@ -1,0 +1,65 @@
+---
+interface Props {
+  project: {
+    title: string;
+    description: string;
+    tags: string[] | string;
+    slug: string;
+    image?: { data?: { attributes?: { url: string } } } | string;
+  };
+}
+
+const { project } = Astro.props;
+
+const tagList = Array.isArray(project.tags) 
+  ? project.tags 
+  : typeof project.tags === 'string' 
+    ? project.tags.split(',').map(t => t.trim()) 
+    : [];
+---
+
+<div class="bg-white border border-foreground/10 flex flex-col h-full group hover:border-highlight/40 transition-colors duration-300">
+  
+  <div class="aspect-[16/10] w-full bg-foreground/5 border-b border-foreground/10 overflow-hidden relative">
+    {project.image ? (
+      <img 
+        src={typeof project.image === 'string' ? project.image : project.image?.data?.attributes?.url} 
+        alt={project.title}
+        class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+      />
+    ) : (
+      <div class="w-full h-full flex items-center justify-center text-foreground/20 font-serif italic text-sm">
+        No preview snapshot available
+      </div>
+    )}
+  </div>
+
+  <div class="p-5 flex flex-col flex-1">
+    <h3 class="font-serif font-black text-xl text-foreground mb-2 group-hover:text-highlight transition-colors">
+      {project.title}
+    </h3>
+
+    {tagList.length > 0 && (
+      <div class="flex flex-wrap gap-1.5 mb-4">
+        {tagList.map((tag) => (
+          <span class="font-sans text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-none bg-foreground/5 text-foreground/70 border border-foreground/10 uppercase">
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <p class="font-serif text-sm text-foreground/80 leading-relaxed text-justify flex-1 mb-4 line-clamp-3">
+      {project.description}
+    </p>
+
+    <div class="text-right mt-auto">
+      <a 
+        href={`/projects/${project.slug}`} 
+        class="font-serif text-xs font-bold text-foreground/60 hover:text-highlight tracking-wide transition-colors inline-flex items-center gap-1"
+      >
+        Details <span class="text-[10px] font-sans tracking-tighter opacity-80">›››</span>
+      </a>
+    </div>
+  </div>
+</div>
